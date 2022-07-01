@@ -32,7 +32,7 @@ X = torch.rand(1,ch,h,w)
 #X = torch.ones(1,ch,h,w)
 Y = batch_norm(X)
 
-# function form 
+# function form
 #see: https://pytorch.org/docs/stable/nn.html#torch.nn.BatchNorm2d
 Y2 = (X - E_x) / torch.sqrt(var_x + eps)
 Y2 = Y2 * W + B

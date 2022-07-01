@@ -1,4 +1,3 @@
-import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -67,7 +66,7 @@ x0 = x0 + torch.tensor([-1,2,2]).to(my_config.device) # so the output of the fir
 
 def net():
     net = MyNet()
-    # create a list of the network's layers 
+    # create a list of the network's layers
     relu = torch.nn.ReLU(inplace=False)
     '''
     net.layers = [net.fc1, relu,

@@ -1,6 +1,8 @@
+import logging
 import torch
 import torch.nn as nn
-import utils
+
+from . import utils
 
 def relu(x):
     return (x>0)*x
@@ -48,7 +50,10 @@ def global_bound(net, x0):
             lip[i] = 1
 
         else:
-            print('ERROR: THIS TYPE OF LAYER HAS NOT BEEN SUPPORTED YET')
+            logging.getLogger("local_lipschitz.global_bound").error(
+                'THIS TYPE OF LAYER HAS NOT BEEN SUPPORTED YET: %s',
+                layer.__class__.__name__
+            )
 
     return lip
 
@@ -87,7 +92,7 @@ def local_bound(net, x0, eps, batch_size=32):
             # get spectral norm
             with torch.no_grad():
                 y0 = layer(X0[i]).flatten() # A@x0 + b
-        
+
             # ybar and R
             y0 = y0.double()
             ybar = eps*aiTD + y0
@@ -99,7 +104,7 @@ def local_bound(net, x0, eps, batch_size=32):
 
             r = (relu(ybar) - relu(y0))/(ybar - y0)
             # this should replace any nans from the prevoius operation with 0s
-            r[inds_flat] = 0 
+            r[inds_flat] = 0
             RAD_norm, V = utils.get_RAD(
                 layer, X0[i].shape, d=d[i], r_squared=r**2)
             L = RAD_norm.item()
@@ -132,7 +137,9 @@ def local_bound(net, x0, eps, batch_size=32):
                 d[i+1] = d[i]
                 L = 1
             else:
-                print('THE ADAPTIVE AVG POOL SECTION IS NOT IMPLEMENTED FOR INPUTS & OUTPUTS OF DIFFERENT SIZES') 
+                logging.getLogger("local_lipschitz.local_bound").error(
+                    'THE ADAPTIVE AVG POOL SECTION IS NOT IMPLEMENTED FOR INPUTS & OUTPUTS OF DIFFERENT SIZES'
+                )
 
         # flatten
         elif isinstance(layer, nn.Flatten):
@@ -147,7 +154,10 @@ def local_bound(net, x0, eps, batch_size=32):
 
         # any other type of layer
         else:
-            print('ERROR: NETWORK BOUND IS NOT IMPLEMENTED FOR THIS TYPE OF LAYER')
+            logging.getLogger("local_lipschitz.local_bound").error(
+                'NETWORK BOUND IS NOT IMPLEMENTED FOR THIS TYPE OF LAYER: %s',
+                layer.__class__.__name__
+            )
 
         # update
         eps *= L

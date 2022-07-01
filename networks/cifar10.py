@@ -64,7 +64,7 @@ class MyNet(nn.Module):
 
 def cifar10_mean_std():
     '''
-    get mean and variance of a dataset 
+    get mean and variance of a dataset
 
     reference values: https://github.com/kuangliu/pytorch-cifar/issues/8
     '''
@@ -79,7 +79,7 @@ def cifar10_mean_std():
     sum = 0.
     n_batches = 0.
     for batch_idx, (inputs, targets) in enumerate(loader):
-        (batch_size, ch, h, w) = inputs.shape 
+        (batch_size, ch, h, w) = inputs.shape
         sum += inputs.sum((0,2,3)) # sum over batch dimension
         n_batches += batch_size
     mean = sum/(n_batches*h*w)
@@ -89,7 +89,7 @@ def cifar10_mean_std():
     mean = mean[None,:,None,None]
     sum = 0.
     for batch_idx, (inputs, targets) in enumerate(loader):
-        (batch_size, ch, h, w) = inputs.shape 
+        (batch_size, ch, h, w) = inputs.shape
         sum += ((inputs-mean)**2).sum((0,2,3)) # sum over batch dimension
     denom = (n_batches-1)*h*w
     std = torch.sqrt(sum/denom)
@@ -138,7 +138,7 @@ def net():
                   net.pool,
                   flatten,
                   net.fc1, relu,
-                  net.fc2] 
+                  net.fc2]
 
     return net
 '''

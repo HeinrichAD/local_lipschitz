@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 
-import network_bound
+import local_lipschitz.network_bound as network_bound
 import my_config
 
 class MyNet(nn.Module):
@@ -12,7 +12,7 @@ class MyNet(nn.Module):
         super(MyNet, self).__init__()
         self.conv1 = nn.Conv2d(1,6,5)
         self.conv2 = nn.Conv2d(6,16,5)
-        self.maxpool = nn.MaxPool2d(2) 
+        self.maxpool = nn.MaxPool2d(2)
         self.fc1 = nn.Linear(16*4*4,84)
         self.fc2 = nn.Linear(84,10)
         self.relu = nn.ReLU(inplace=False)

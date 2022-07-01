@@ -7,9 +7,9 @@ from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 import lip.network.utils as ut
 
 n_samp = 500
-X2 = ut.sample_ball(2,n_samp)
+X2 = ut.sample_ball(2,n_samp,"cpu")
 X2 = X2.cpu().numpy()
-X3 = ut.sample_ball(3,n_samp)
+X3 = ut.sample_ball(3,n_samp,"cpu")
 X3 = X3.cpu().numpy()
 fig = pp.figure()
 ax1 = fig.add_subplot(211)

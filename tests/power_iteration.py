@@ -7,7 +7,6 @@ import pathlib
 import numpy as np
 import torch
 import torch.nn as nn
-import scipy as sp
 
 # add main directory to search path so I can import my other files
 tests_dir = pathlib.Path(__file__).parent.absolute()
@@ -15,7 +14,7 @@ main_dir = tests_dir.parent.absolute()
 sys.path.insert(1, main_dir)
 
 import my_config
-import utils
+import local_lipschitz.utils as utils
 
 ###############################################################################
 # SETUP
@@ -48,7 +47,7 @@ Y = conv(X)
 x = X.flatten()
 y = Y.flatten()
 conv_new = copy.deepcopy(conv)
-conv_nobias = copy.deepcopy(conv) 
+conv_nobias = copy.deepcopy(conv)
 conv_nobias.bias = None
 
 ###############################################################################
@@ -101,7 +100,7 @@ norm_pow = norm_pow.item()
 print('\nNORM OF R@A')
 print('matrix:', norm_svd)
 print('pow:', norm_pow)
-print('matrix v. pow error:', np.abs(norm_svd - norm_pow)) 
+print('matrix v. pow error:', np.abs(norm_svd - norm_pow))
 
 
 ###############################################################################

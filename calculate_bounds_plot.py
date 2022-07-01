@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import matplotlib.pyplot as pp
-import torch
 import torch.nn as nn
 
 import my_config
@@ -18,7 +17,7 @@ pp.rc('text', usetex=True)
 pp.rc('text.latex', preamble=r'\usepackage{amsmath,amsfonts,amssymb}  \providecommand{\norm}[1]{\lVert#1\rVert}  \def\<#1>{\boldsymbol{\mathbf{#1}}}')
 
 # setup
-device = my_config.device 
+device = my_config.device
 main_dir = exp.main_dir
 net_name = exp.net_name
 plot_name = exp.plot_name
@@ -35,7 +34,7 @@ global_npz = os.path.join(main_dir, 'global.npz')
 local_npz = os.path.join(main_dir, 'local.npz')
 est_lipest_npz = os.path.join(main_dir, 'lip_estimation/', 'results.npz')
 
-#fig_i_png = os.path.join('fig/', net_name+'_layer_%1d.png') 
+#fig_i_png = os.path.join('fig/', net_name+'_layer_%1d.png')
 fig_png = os.path.join('fig/', net_name+'.png')
 fig_pdf = os.path.join('fig/', net_name+'.pdf')
 

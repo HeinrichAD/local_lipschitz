@@ -145,5 +145,5 @@ print('Lipschitz spectral: {}'.format(lip_spectral))
 print('Lipschitz approximation: {}'.format(lip))
 
 # save the results
-save_npz = os.path.join(save_dir, 'results.npz') 
+save_npz = os.path.join(save_dir, 'results.npz')
 np.savez(save_npz, autolip=lip_spectral, greedy_seqlip=lip)

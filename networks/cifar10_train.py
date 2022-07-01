@@ -2,7 +2,6 @@ import os.path
 import torch
 import torch.nn as nn
 import torchvision
-import torchvision.transforms as transforms
 
 import my_config
 import cifar10

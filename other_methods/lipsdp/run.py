@@ -6,16 +6,16 @@ from scipy.io import savemat
 import subprocess
 
 # add main directory to system path so I can import the files
-script_dir = pathlib.Path(__file__).parent.absolute() 
+script_dir = pathlib.Path(__file__).parent.absolute()
 main_dir = script_dir.parent
 sys.path.insert(0, main_dir)
 
 import my_config
-import utils
+import local_lipschitz.utils as utils
 import solve_sdp
 
 # files
-device = my_config.device 
+device = my_config.device
 save_dir = os.path.join(dirs.mnist_dir, 'lipsdp/')
 #weight_file = os.path.join(save_dir, 'weights.mat')
 weight_file = os.path.join(save_dir, 'random_weights.mat')

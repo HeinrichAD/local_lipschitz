@@ -9,12 +9,12 @@ import torch.nn as nn
 
 import my_config
 import mnist, cifar10, alexnet
-import utils
+import local_lipschitz.utils as utils
 import solve_sdp
 
 # setup
-solve_sdp_file = solve_sdp.__file__ 
-lipsdp_dir = str(Path(solve_sdp_file).parent) 
+solve_sdp_file = solve_sdp.__file__
+lipsdp_dir = str(Path(solve_sdp_file).parent)
 
 '''
 MNIST net layer sizes
@@ -29,7 +29,7 @@ MNIST net layer sizes
 10
 '''
 
-device = my_config.device 
+device = my_config.device
 
 net = mnist.mnist_net()
 net = net.to(device)

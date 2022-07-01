@@ -9,7 +9,7 @@ import utils
 from networks import mnist
 
 # setup
-device = my_config.device 
+device = my_config.device
 mode = 'mnist'
 
 main_dir = dirs.mnist_dir

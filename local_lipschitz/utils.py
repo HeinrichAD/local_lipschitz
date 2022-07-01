@@ -1,17 +1,15 @@
 import warnings
-import time
 import copy
+import logging
 import numpy as np
 import torch
 import torch.nn as nn
+from typing import Optional, Union
 from tqdm import tqdm
-import torchattacks
 from PIL import Image
 
-import my_config
-device = my_config.device
 
-def conv_matrix(conv, input_shape):
+def conv_matrix(conv, input_shape, device):
     '''
     get the matrix corresponding to a convolution function
     input_shape is of size (N,chan,rows,cols)
@@ -26,7 +24,7 @@ def conv_matrix(conv, input_shape):
     # copy conv and remove the bias
     conv_no_bias = copy.deepcopy(conv)
     conv_no_bias.bias = None
-    
+
     # put identity matrix through conv function
     E = torch.eye(n).to(device)
     E = E.view(n,ch,r,c)
@@ -97,6 +95,7 @@ def get_RAD(func, input_shape, d=None, r_squared=None, n_iter=100):
                identity matrix
     n_iter: number of iterations
     '''
+    device = get_device(func)
 
     ########## conv2d ##########
     if isinstance(func, nn.Conv2d):
@@ -215,6 +214,7 @@ def get_aiTD(func, input_shape, output_shape,
     pos_input: boolean, whether or not the inputs to the function are positive
     d: 1D array, diagonal elements of D, None othewise
     '''
+    device = get_device(func)
 
     # get sizes of A matrix
     n = input_shape.numel()
@@ -282,10 +282,10 @@ def get_aiTD(func, input_shape, output_shape,
     return l
 
 
-def sample_ball(n, n_samp):
+def sample_ball(n, n_samp, device):
     '''
     sample points from inside an n-ball
-    see (method 20): http://extremelearning.com.au/how-to-generate-uniformly-random-points-on-n-spheres-and-n-balls/ 
+    see (method 20): http://extremelearning.com.au/how-to-generate-uniformly-random-points-on-n-spheres-and-n-balls/
     also see: https://www.mathworks.com/matlabcentral/answers/439125-generate-random-sample-of-points-distributed-on-the-n-dimensional-sphere-of-radius-r-and-centred-at
     '''
 
@@ -326,11 +326,11 @@ def lower_bound_random(func, x0, eps, n_test=10000, batch_size=200):
             diffs = diffs.reshape((batch_size, -1))
             diffs_nrms = torch.norm(diffs, dim=1)
             nrms = diffs_nrms/X_ball_nrm # output diffs divided by input diffs
-            nrms[torch.isinf(nrms)] = -float('inf') # turn infs (from zero X_ball_nrm values) to negative infs 
+            nrms[torch.isinf(nrms)] = -float('inf') # turn infs (from zero X_ball_nrm values) to negative infs
             nrms[torch.isnan(nrms)] = -float('inf') # turn nans into negative infs
             ind = torch.argmax(nrms)
             mx_i = nrms[ind]
-            
+
             #if eps > 2: import pdb; pdb.set_trace()
 
             if mx_i > mx:
@@ -373,7 +373,7 @@ def n_evenly_spaced_m(m, n):
     return [i*n//m + n//(2*m) for i in range(m)]
 
 
-def alpha_trans_sorted(b, eps, l, n_alpha):
+def alpha_trans_sorted(b, eps, l, n_alpha, device):
     '''
     get a list of alpha values where Rbar changes (transitions)
     take only n_alpha evenly-spaced values from this list
@@ -408,16 +408,17 @@ def jacobian_old(fun, x, row_inds=None, batch_size=10):
     calculate the Jacobian of a function with respect to input x
     the Jacobian will be an array in which the first dimension corresponds to
     the flattened output, and the remaining dimensions correspond to the input
-    
+
     fun: pytorch function to compute the Jacobian with respect to
     x: input with batch size of 1
     row_inds: if is not None, take only a certain part of the Jacobian
-              row_inds[0] is the index of the starting row & row_inds[1] is the index of the end row 
+              row_inds[0] is the index of the starting row & row_inds[1] is the index of the end row
               consistent with Python indexing, row_inds[0] is inclusive and row_inds[1] is exclusive
 
     the code is partially based on:
     https://github.com/pytorch/pytorch/issues/10223#issuecomment-560564547
     '''
+    device = get_device(fun)
 
     # function input x
     x_shape = x.shape
@@ -475,16 +476,17 @@ def jacobian(fun, x, row_inds=None, batch_size=10):
     calculate the Jacobian of a function with respect to input x
     the Jacobian will be an array in which the first dimension corresponds to
     the flattened output, and the remaining dimensions correspond to the input
-    
+
     fun: pytorch function to compute the Jacobian with respect to
     x: input with batch size of 1
     row_inds: if is not None, take only a certain part of the Jacobian
-              row_inds[0] is the index of the starting row & row_inds[1] is the index of the end row 
+              row_inds[0] is the index of the starting row & row_inds[1] is the index of the end row
               consistent with Python indexing, row_inds[0] is inclusive and row_inds[1] is exclusive
 
     the code is partially based on:
     https://github.com/pytorch/pytorch/issues/10223#issuecomment-560564547
     '''
+    device = get_device(fun)
 
     # function input x
     x_shape = x.shape
@@ -545,8 +547,9 @@ def jacobian_col(fun, x0, col_inds=None, batch_size=10):
     x: input with batch size of 1
     col_inds: col_inds[0] is the starting index of the column to return (inclusive)
               col_inds[1] is the ending index of the column to return (exclusive)
-    
+
     '''
+    device = get_device(fun)
 
     J = torch.Tensor().to(device) # empty tensor to start with
     y0 = fun(x0)
@@ -573,7 +576,8 @@ def jacobian_left_product(fun, x0, z, batch_size=10):
     x0: input of original shape
     z: 1D vector
     '''
-    
+    device = get_device(fun)
+
     vec = torch.Tensor().to(device) # empty tensor to start with
     n_x = x0.numel()
 
@@ -593,7 +597,7 @@ def FGSM(fun, x, ind, eps, normalize=True):
     '''
     fast gradient sign method from "Explaining and Harnessing Adversarial Examples"
     https://arxiv.org/pdf/1412.6572.pdf
-    
+
     ind = the index of the output to consider
     '''
 
@@ -655,7 +659,7 @@ def lower_bound_FGSM(fun, x, eps_lb, save_npz):
         lb_max = -1
         for j in range(n_y):
             x_pert = FGSM(fun, x, j, eps_i)
-            y_pert = fun(x_pert) 
+            y_pert = fun(x_pert)
             lb_j = torch.norm(y - y_pert)/torch.norm(x - x_pert)
             if lb_j > lb_max:
                 lb_max = lb_j
@@ -676,7 +680,7 @@ def lower_bound_adv(fun, x, eps_lb, batch_size=10):
     for i in range(n_eps):
         eps_i = eps_lb[i]
         x_pert = grad_adv(fun, x, eps_i, batch_size=batch_size)
-        y_pert = fun(x_pert) 
+        y_pert = fun(x_pert)
         lb[i] = torch.norm(y - y_pert)/torch.norm(x - x_pert)
 
     return lb
@@ -719,7 +723,7 @@ def lower_bound_asc(fun, x, eps_lb, step_size=1e-4):
         else:
             lb[i] = 0
 
-    return lb 
+    return lb
 
 
 def max_pool_inds(fun, input_shape, batch_size=100):
@@ -739,7 +743,7 @@ def max_pool_inds(fun, input_shape, batch_size=100):
     n_y = y_test.numel()
 
     x_i = torch.eye(batch_size, n_x)
-    x_i = x_i.view(batch_size, -1) 
+    x_i = x_i.view(batch_size, -1)
     #x_batches = torch.split(x, batch_size, dim=0)
 
     x_list = []
@@ -799,9 +803,11 @@ def max_pool_lip(fun):
     For a  2D max pooling function that is symmetric (equal kernel size and
     stride in each dimension), we can square n_max_1d to get the total n_max.
     '''
-    
+
     if fun.dilation != 1:
-        print('ERROR: NOT IMPLEMENTED FOR DILATIONS OTHER THAN 1')
+        logging.getLogger("local_lipschitz.max_pool_lip").error(
+            'NOT IMPLEMENTED FOR DILATIONS OTHER THAN 1'
+        )
 
     kernel_size = fun.kernel_size
     stride_size = fun.stride
@@ -835,6 +841,7 @@ def adv_asc_class_change(net, x0, ind, step_size, fgsm=False, max_steps=10000):
     adversarial example via gradient ascent
     fgsm: boolean, use the sign of the gradient rather than the actual gradient
     '''
+    device = get_device(net)
 
     y0 = net(x0)
     ind_true = torch.topk(y0.flatten(), 1)[1].item()
@@ -855,7 +862,7 @@ def adv_asc_class_change(net, x0, ind, step_size, fgsm=False, max_steps=10000):
         else:
             x = x + step_size*J # "xc += pert" throws an error
         y = net(x)
-        
+
         top, ind_top = torch.topk(y.flatten(), 1)
         ind_top = ind_top.item()
         i+=1
@@ -874,6 +881,7 @@ def adv_asc_class_change_batch(net, x0, step_size, fgsm=False, n_steps=1000, bat
     try gradient ascent with respect to all indices
     fgsm: boolean, use the sign of the gradient rather than the actual gradient
     '''
+    device = get_device(net)
 
     # initial
     x0 = x0
@@ -900,7 +908,7 @@ def adv_asc_class_change_batch(net, x0, step_size, fgsm=False, n_steps=1000, bat
             else:
                 X = X + step_size*J # "xc += pert" throws an error
             Y = net(X)
-            
+
             # which outputs produce a different classification?
             top, ind_top = torch.topk(Y, 1)
             ind_top = ind_top.flatten()
@@ -934,7 +942,7 @@ def adv_rand_class_change(net, x0, eps, n_samp=10000):
     DELTA_X_NRM = torch.norm(DELTA_X.view(n_samp,-1), dim=1)
     X = x0 + DELTA_X
     Y = net(X)
-    
+
     ind_X = torch.topk(Y, 1)[1].flatten()
 
     NRM_CLASS_CHANGE = DELTA_X_NRM[ind_x0!=ind_X]
@@ -951,6 +959,7 @@ def fgsm(net, x0, eps):
     '''
     https://pytorch.org/tutorials/beginner/fgsm_tutorial.html
     '''
+    device = get_device(net)
 
     # nominal input and output
     net.eval()
@@ -979,7 +988,7 @@ def fgsm(net, x0, eps):
     pert_norm = torch.norm(pert).item()
     x_new = x0 + pert
     y_new = net(x_new)
-    
+
     ind_new = torch.topk(y_new.flatten(), 1)[1].item()
     #print('true ind', ind_true)
     #print('pert ind', ind_new)
@@ -1006,6 +1015,8 @@ def ifgsm(net, x0, eps, max_steps=5000, clip=False, lower=0, upper=0):
     lower: lower value of clip
     upper: upper value of clip
     '''
+
+    device = get_device(net)
 
     # nominal input and output
     net.eval()
@@ -1064,7 +1075,7 @@ def ifgsm(net, x0, eps, max_steps=5000, clip=False, lower=0, upper=0):
         i += 1
 
     # total perturbation
-    pert_total = x_new - x0 
+    pert_total = x_new - x0
     pert_norm = torch.linalg.vector_norm(pert_total).item()
 
     return ind_new, pert_norm, i
@@ -1072,7 +1083,7 @@ def ifgsm(net, x0, eps, max_steps=5000, clip=False, lower=0, upper=0):
 
 def cw_attack(exp,LEARNING_RATE=5e-2,BINARY_SEARCH_STEPS=9, MAX_ITERATIONS=10000, ABORT_EARLY=True,TARGETED=False,CONFIDENCE=0,INITIAL_CONST=1e-3,PRINT_PROG=False):
     '''
-    adversarial attack from Carlini & Wagner 
+    adversarial attack from Carlini & Wagner
 
     I created this function by taking the original (TensorFlow) code and
     converting it to PyTorch. I tried to keep the code structure and variable
@@ -1082,6 +1093,8 @@ def cw_attack(exp,LEARNING_RATE=5e-2,BINARY_SEARCH_STEPS=9, MAX_ITERATIONS=10000
 
     https://github.com/carlini/nn_robust_attacks/blob/master/l2_attack.py
     '''
+
+    device = get_device(exp.x0)
 
     # nominal input image and output
     x0 = exp.x0
@@ -1174,7 +1187,7 @@ def cw_attack(exp,LEARNING_RATE=5e-2,BINARY_SEARCH_STEPS=9, MAX_ITERATIONS=10000
 
         prev = np.inf
         for iteration in range(MAX_ITERATIONS):
-            # perform the attack 
+            # perform the attack
             timg = torch.from_numpy(batch).to(device)
             newimg = torch.tanh(modifier + timg) * boxmul + boxplus
             output = net(newimg)
@@ -1203,12 +1216,12 @@ def cw_attack(exp,LEARNING_RATE=5e-2,BINARY_SEARCH_STEPS=9, MAX_ITERATIONS=10000
             scores = output.detach().cpu().numpy()
             nimg = newimg.detach().cpu().numpy()
             l = loss.item()
-            
+
             if np.all(scores>=-.0001) and np.all(scores <= 1.0001):
                 if np.allclose(np.sum(scores,axis=1), 1.0, atol=1e-3):
-                    if not self.I_KNOW_WHAT_I_AM_DOING_AND_WANT_TO_OVERRIDE_THE_PRESOFTMAX_CHECK:
+                    if not I_KNOW_WHAT_I_AM_DOING_AND_WANT_TO_OVERRIDE_THE_PRESOFTMAX_CHECK:
                         raise Exception("The output of model.predict should return the pre-softmax layer. It looks like you are returning the probability vector (post-softmax). If you are sure you want to do that, set attack.I_KNOW_WHAT_I_AM_DOING_AND_WANT_TO_OVERRIDE_THE_PRESOFTMAX_CHECK = True")
-            
+
             # print out the losses every 10%
             if iteration%(MAX_ITERATIONS//10) == 0:
                 if PRINT_PROG:
@@ -1230,7 +1243,7 @@ def cw_attack(exp,LEARNING_RATE=5e-2,BINARY_SEARCH_STEPS=9, MAX_ITERATIONS=10000
                     o_bestl2[e] = l2
                     o_bestscore[e] = np.argmax(sc)
                     o_bestattack[e] = ii
-            
+
 
         # adjust the constant as needed
         for e in range(batch_size):
@@ -1253,3 +1266,32 @@ def cw_attack(exp,LEARNING_RATE=5e-2,BINARY_SEARCH_STEPS=9, MAX_ITERATIONS=10000
     x_adv = torch.from_numpy(o_bestattack[0]).float().to(device)
     x_adv = torch.unsqueeze(x_adv,0)
     return x_adv
+
+
+def get_device(
+    source: Optional[Union[
+        torch.nn.Module,
+        torch.utils.data.DataLoader,
+        torch.utils.data.Dataset
+    ]] = None
+) -> torch.device:
+    """
+    Get device from source.
+    If source is not set, the GPU device will be return if available, otherwise the CPU device.
+
+    Args:
+        source (Optional[Union[torch.Tensor, torch.nn.Module, torch.utils.data.DataLoader, torch.utils.data.Dataset]], optional):
+            Source to get device from. Defaults to None.
+
+    Returns:
+        torch.device: PyTorch device
+    """
+    if isinstance(source, torch.utils.data.DataLoader):
+        return next(iter(source))[0].device
+    if isinstance(source, torch.utils.data.Dataset):
+        return source[0][0].device
+    if isinstance(source, torch.nn.Module):
+        return next(iter(source.parameters())).device
+    if isinstance(source, torch.Tensor):
+        return source.get_device()
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")

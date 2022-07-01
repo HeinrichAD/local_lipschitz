@@ -1,9 +1,7 @@
 # this scipt shows that torchvisions' transforms.Normalize() function is an
 # affine operator
 
-import numpy as np
 import torch
-import torchvision
 import torchvision.transforms as transforms
 
 mean = (3,2,1)

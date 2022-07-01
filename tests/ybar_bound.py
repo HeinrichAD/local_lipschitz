@@ -35,17 +35,17 @@ for i in range(n_trials):
     x0 = np.random.uniform(-1,1,n)
     b = np.random.uniform(-1,1,m)
     A = np.random.uniform(-1,1,(m,n))
-    d = np.random.randint(0,2,n) 
+    d = np.random.randint(0,2,n)
     #d = np.ones(n)
     D = np.diag(d)
     y0 = A@x0 + b
 
-    # analytical  
+    # analytical
     aiTD_norm = np.linalg.norm(A@D, axis=1)
-    y_bar_anl = eps*aiTD_norm + y0 
+    y_bar_anl = eps*aiTD_norm + y0
 
     # brute-force
-    DELTA_X = eps*D@X_UNIT  
+    DELTA_X = eps*D@X_UNIT
     X = x0[:,None] + DELTA_X
     Y = A@D@DELTA_X + y0[:,None]
     y_bar_brute = np.max(Y, axis=1)

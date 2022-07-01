@@ -23,7 +23,7 @@ main_dir = 'data/mnist/'
 
 def mnist_mean_std():
     '''
-    get mean and variance of a dataset 
+    get mean and variance of a dataset
 
     reference values: https://discuss.pytorch.org/t/normalization-in-the-mnist-example/457
     '''
@@ -38,7 +38,7 @@ def mnist_mean_std():
     sum = 0.
     n_batches = 0.
     for batch_idx, (inputs, targets) in enumerate(loader):
-        (batch_size, ch, h, w) = inputs.shape 
+        (batch_size, ch, h, w) = inputs.shape
         sum += inputs.sum((0,2,3)) # sum over batch dimension
         n_batches += batch_size
     mean = sum/(n_batches*h*w)
@@ -48,7 +48,7 @@ def mnist_mean_std():
     mean = mean[None,:,None,None]
     sum = 0.
     for batch_idx, (inputs, targets) in enumerate(loader):
-        (batch_size, ch, h, w) = inputs.shape 
+        (batch_size, ch, h, w) = inputs.shape
         sum += ((inputs-mean)**2).sum((0,2,3)) # sum over batch dimension
     denom = (n_batches-1)*h*w
     std = torch.sqrt(sum/denom)
@@ -122,7 +122,7 @@ def net():
     ckpt_file = os.path.join(main_dir, 'ckpt_99.ckpt')
     net.load_state_dict(torch.load(ckpt_file, map_location=my_config.device)['net'])
 
-    # create a list of the network's layers 
+    # create a list of the network's layers
     #relu = torch.nn.functional.relu
     relu = torch.nn.ReLU(inplace=False)
     flatten = nn.Flatten()

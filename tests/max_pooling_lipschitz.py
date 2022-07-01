@@ -42,8 +42,8 @@ X2 = torch.rand(n_batch,n_x,n_y)
 # values I know will achieve the max lipschitz
 custom_values = 1
 if custom_values:
-    X1[-1,:,:] = torch.zeros(n_x, n_y) 
-    X2[-1,:,:] = torch.zeros(n_x, n_y) 
+    X1[-1,:,:] = torch.zeros(n_x, n_y)
+    X2[-1,:,:] = torch.zeros(n_x, n_y)
     if mode=='paper':
         X1[:,4,4] = 1
         X2[:,4,4] = .5

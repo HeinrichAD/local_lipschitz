@@ -37,7 +37,7 @@ for i in range(n_trials):
     x0 = np.random.uniform(-1,1,n)
     A = np.random.uniform(-1,1,(m,n))
     b = np.random.uniform(-1,1,m)
-    d = np.random.randint(0,2,n) 
+    d = np.random.randint(0,2,n)
     #d = np.ones(n)
     D = np.diag(d)
 
@@ -48,13 +48,13 @@ for i in range(n_trials):
     ybar = eps*aiTD_norm + y0
     np.seterr(invalid='ignore')
     r = (relu(ybar) - relu(y0))/(ybar - y0)
-    zero_inds = (aiTD_norm==0) 
+    zero_inds = (aiTD_norm==0)
     r[zero_inds] = 0
-    R = np.diag(r) 
+    R = np.diag(r)
     lip_anl[i] = np.linalg.norm(R @ A @ D)
 
     # brute-force solution
-    DELTA_X = eps*D@X_UNIT  
+    DELTA_X = eps*D@X_UNIT
     X = x0[:,None] + DELTA_X
     Z = relu(A @ X + b[:,None])
     lip_num = np.linalg.norm(Z - z0[:,None], axis=0)

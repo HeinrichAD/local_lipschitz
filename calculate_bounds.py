@@ -2,12 +2,11 @@ import os
 import time
 import numpy as np
 import torch
-import torch.nn as nn
 from tqdm import tqdm
 
 import my_config
-import network_bound
-import utils
+import local_lipschitz.network_bound as network_bound
+import local_lipschitz.utils as utils
 
 import networks.tiny as exp
 #import networks.compnet as exp
@@ -20,7 +19,7 @@ def relu(x):
     return (x>0)*x
 
 # setup
-device = my_config.device 
+device = my_config.device
 
 # which bounds to compute?
 compute_rand =   1

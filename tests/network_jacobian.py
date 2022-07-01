@@ -4,7 +4,6 @@ get the jacobian of a full network
 
 import os
 from PIL import Image
-import numpy as np
 import torch
 import torch.nn as nn
 from torchvision.transforms import ToPILImage
@@ -57,7 +56,7 @@ print('\033[4mi |  1st   | 2nd    | lip \033[0m')
 def print_output(x, y, str):
     lip = torch.norm(y0 - y)/torch.norm(x0 - x)
     out = nn.functional.softmax(y, dim=1)
-    top3_val, top3_ind = torch.topk(out, 3) 
+    top3_val, top3_ind = torch.topk(out, 3)
     print(str, '|', top3_ind[0][0].item(), '%.2f' % top3_val[0][0].item(), '|',
                     top3_ind[0][1].item(), '%.2f' % top3_val[0][1].item(), '|',
                     '%.2f' % lip.item())
