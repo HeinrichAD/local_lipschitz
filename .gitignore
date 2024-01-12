@@ -30,3 +30,7 @@ data/vgg16/*
 !data/cifar10/*.npz
 !data/alexnet/*.npz
 !data/vgg16/*.npz
+
+# generated files
+/build
+/local_lipschitz.egg-info

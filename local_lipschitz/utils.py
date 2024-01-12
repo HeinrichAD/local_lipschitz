@@ -777,10 +777,10 @@ def max_pool_inds(fun, input_shape, batch_size=100):
     return x_list, y_list
 
 
-def max_pool_lip(fun):
+def max_pool_lip(fun) -> float:
     '''
-    lipschitz constant of max poolng function the lipschitz constant is equal
-    to the square root of the max number of output elments any input element
+    lipschitz constant of max pooling function the lipschitz constant is equal
+    to the square root of the max number of output elements any input element
     can appear in
 
     How to determine the Lipschitz constant based on stride and kernel size:
@@ -799,7 +799,7 @@ def max_pool_lip(fun):
 
                         strides = ceil(kernel_size/stride_size)
 
-    This gives us the max number of times any imput can appear in the output.
+    This gives us the max number of times any input can appear in the output.
     For a  2D max pooling function that is symmetric (equal kernel size and
     stride in each dimension), we can square n_max_1d to get the total n_max.
     '''
@@ -833,7 +833,7 @@ def max_pool_lip(fun):
     n_max = n_max_0*n_max_1
     lip = np.sqrt(n_max)
 
-    return lip
+    return lip.item()
 
 
 def adv_asc_class_change(net, x0, ind, step_size, fgsm=False, max_steps=10000):
