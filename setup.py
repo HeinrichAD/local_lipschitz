@@ -3,7 +3,7 @@ from setuptools import setup
 
 # read version file
 # exec(open("src/version.py").read())
-__version__ = "0.0.1-dev"
+__version__ = "0.0.1-dev1"
 
 
 def readme():
@@ -20,9 +20,10 @@ setup(
     long_description=readme(),
     long_description_content_type="text/markdown",
     url="https://github.com/HeinrichAD/local_lipschitz",
+    license_files=["LICENSE"],
     packages=["local_lipschitz"],
     package_dir={
-        "local_lipschitz": 'local_lipschitz',
+        "local_lipschitz": "local_lipschitz",
     },
     # include_package_data=True,
     python_requires=">=3.7",
@@ -43,7 +44,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
-        # "License :: OSI Approved :: GNU General Public License",
+        "License :: OSI Approved :: MIT License",
         # "Topic :: Scientific/Engineering",
     ],
 )
